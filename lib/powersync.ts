@@ -12,6 +12,10 @@ export const powersync = new PowerSyncDatabase({
 });
 
 export async function openConnection() {
+    /**
+     * In a real application, this function would be called after the user logs in with their own details and a login screen.
+     * For demo purposes, the login screen is skipped and instead the user's details are configured in .env.local.
+     */
     const {
         data: { user },
         error,
@@ -26,5 +30,6 @@ export async function openConnection() {
 
     await powersync.connect(new SupabaseConnector());
 
+    // Return user object for convenience
     return user;
 }

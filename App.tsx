@@ -1,88 +1,103 @@
+// Polyfills for AsyncIterator and getRandomValues
 import 'react-native-get-random-values';
 import '@azure/core-asynciterator-polyfill';
 
 import { StatusBar } from 'expo-status-bar';
-import { Alert, Button, StyleSheet, View, TextInput } from 'react-native';
+import {
+    Alert,
+    Button,
+    StyleSheet,
+    View,
+    TextInput,
+    FlatList,
+} from 'react-native';
 import { useEffect, useState } from 'react';
 import { openConnection } from './lib/powersync';
 import { persister } from './lib/persister';
 import { v4 as uuid } from 'uuid';
 
-type List = {
+type Todo = {
     id: string;
     created_at: string;
+    completed: boolean;
+    description: string;
     owner_id: string;
-    name: string;
 };
 
 export default function App() {
     const [userId, setUserId] = useState('');
-    const [lists, setLists] = useState<List[]>([]);
-    const [listName, setListName] = useState('');
+    const [todos, setTodos] = useState<Todo[]>([]);
+    const [description, setDescription] = useState('');
 
     const store = persister.getStore();
 
     useEffect(() => {
         (async () => {
+            // Get user ID
             const { id } = await openConnection();
-
             setUserId(id);
 
+            // Save todos to state
             await persister.load();
 
-            console.log(store.getTable('lists'));
-
-            const newLists = [];
-            const rowIds = store.getRowIds('lists');
+            const newTodos = [];
+            const rowIds = store.getRowIds('todos');
             for (const rowId of rowIds) {
-                const data = store.getRow('lists', rowId);
+                const data = store.getRow('todos', rowId);
                 const list = {
                     id: rowId,
                     ...data,
-                } as List;
+                } as Todo;
 
-                newLists.push(list);
+                newTodos.push(list);
             }
 
-            setLists(newLists);
+            setTodos(newTodos);
         })();
     }, []);
 
+    // Log todo IDs to the console
     useEffect(() => {
-        console.log('----- START NEW LISTS -----');
-        lists.forEach((item) => console.log(item.id));
-        console.log('----- END NEW LISTS -----');
-    }, [lists]);
+        console.log(' -- TODOS UPDATED --');
+        todos.forEach((item) => console.log(item.id));
+    }, [todos]);
 
-    async function addList() {
-        const listId = uuid();
+    // Create a new todo using Tinybase
+    async function addTodo() {
+        const todoId = uuid();
 
-        store.setRow('lists', listId, {
+        store.setRow('todos', todoId, {
             created_at: new Date().toUTCString(),
+            completed: false,
             owner_id: userId,
-            name: listName,
+            description,
         });
 
         await persister.save();
 
-        Alert.alert('Saved new list w/ ID: ' + listId);
+        Alert.alert('Saved new list w/ ID: ' + todoId);
     }
 
     return (
         <View style={styles.container}>
-            <TextInput onChangeText={setListName} />
-            <Button title='Add new list' onPress={addList} />
+            <Button title='Add new todo' onPress={addTodo} />
+            <FlatList
+                style={styles.todoList}
+                data={todos}
+                renderItem={TodoItem}
+            />
             <StatusBar style='auto' />
         </View>
     );
 }
 
+function TodoItem(props: any) {
+    console.debug(props);
+    return <View style={styles.todoItem}></View>;
+}
+
 const styles = StyleSheet.create({
-    container: {
-        padding: 32,
-        flex: 1,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
+    container: {},
+    todoList: {},
+    todoItem: {},
 });

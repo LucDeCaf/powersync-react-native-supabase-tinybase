@@ -1,0 +1,6 @@
+# Paste the contents of this file as your 'sync-rules.yaml' file in the PowerSync Dashboard
+bucket_definitions:
+  user_todos:
+    parameters: select request.user_id() as user_id
+    data:
+      - select * from todos where owner_id = bucket.user_id
