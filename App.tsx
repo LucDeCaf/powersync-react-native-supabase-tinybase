@@ -4,8 +4,8 @@ import '@azure/core-asynciterator-polyfill';
 import { StatusBar } from 'expo-status-bar';
 import { Alert, Button, StyleSheet, View, TextInput } from 'react-native';
 import { useEffect, useState } from 'react';
-import { openConnection, powersync } from './powersync';
-import { persister } from './persister';
+import { openConnection } from './lib/powersync';
+import { persister } from './lib/persister';
 import { v4 as uuid } from 'uuid';
 
 type List = {
@@ -14,19 +14,6 @@ type List = {
     owner_id: string;
     name: string;
 };
-
-async function testConnection() {
-    try {
-        const rows = await powersync.getAll('select * from lists;');
-        Alert.alert(
-            `Test successful: Returned ${rows.length} row${
-                rows.length === 1 ? '' : 's'
-            }.`
-        );
-    } catch (e) {
-        Alert.alert(`Error: ${e}`);
-    }
-}
 
 export default function App() {
     const [userId, setUserId] = useState('');
