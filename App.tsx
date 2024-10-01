@@ -1,20 +1,101 @@
+import 'react-native-get-random-values';
+import '@azure/core-asynciterator-polyfill';
+
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, Button, StyleSheet, View, TextInput } from 'react-native';
+import { useEffect, useState } from 'react';
+import { openConnection, powersync } from './powersync';
+import { persister } from './persister';
+import { v4 as uuid } from 'uuid';
+
+type List = {
+    id: string;
+    created_at: string;
+    owner_id: string;
+    name: string;
+};
+
+async function testConnection() {
+    try {
+        const rows = await powersync.getAll('select * from lists;');
+        Alert.alert(
+            `Test successful: Returned ${rows.length} row${
+                rows.length === 1 ? '' : 's'
+            }.`
+        );
+    } catch (e) {
+        Alert.alert(`Error: ${e}`);
+    }
+}
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+    const [userId, setUserId] = useState('');
+    const [lists, setLists] = useState<List[]>([]);
+    const [listName, setListName] = useState('');
+
+    const store = persister.getStore();
+
+    useEffect(() => {
+        (async () => {
+            const { id } = await openConnection();
+
+            setUserId(id);
+
+            await persister.load();
+
+            console.log(store.getTable('lists'));
+
+            const newLists = [];
+            const rowIds = store.getRowIds('lists');
+            for (const rowId of rowIds) {
+                const data = store.getRow('lists', rowId);
+                const list = {
+                    id: rowId,
+                    ...data,
+                } as List;
+
+                newLists.push(list);
+            }
+
+            setLists(newLists);
+        })();
+    }, []);
+
+    useEffect(() => {
+        console.log('----- START NEW LISTS -----');
+        lists.forEach((item) => console.log(item.id));
+        console.log('----- END NEW LISTS -----');
+    }, [lists]);
+
+    async function addList() {
+        const listId = uuid();
+
+        store.setRow('lists', listId, {
+            created_at: new Date().toUTCString(),
+            owner_id: userId,
+            name: listName,
+        });
+
+        await persister.save();
+
+        Alert.alert('Saved new list w/ ID: ' + listId);
+    }
+
+    return (
+        <View style={styles.container}>
+            <TextInput onChangeText={setListName} />
+            <Button title='Add new list' onPress={addList} />
+            <StatusBar style='auto' />
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    container: {
+        padding: 32,
+        flex: 1,
+        backgroundColor: '#fff',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
 });

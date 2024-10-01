@@ -4,18 +4,27 @@
   "main": "expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web"
   },
   "dependencies": {
+    "@azure/core-asynciterator-polyfill": "^1.0.2",
+    "@journeyapps/react-native-quick-sqlite": "^1.4.0",
+    "@powersync/react-native": "^1.12.2",
+    "@supabase/supabase-js": "^2.45.4",
+    "@types/uuid": "^10.0.0",
     "expo": "~51.0.28",
     "expo-status-bar": "~1.12.1",
     "react": "18.2.0",
-    "react-native": "0.74.5"
+    "react-native": "0.74.5",
+    "react-native-get-random-values": "~1.11.0",
+    "tinybase": "^5.3.1",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@babel/plugin-transform-async-generator-functions": "^7.25.4",
     "@types/react": "~18.2.45",
     "typescript": "^5.1.3"
   },
